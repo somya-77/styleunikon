@@ -38,8 +38,8 @@ const Signup = () => {
     if (error) {
       toast.error(error);
     } else {
-      toast.success('Account created! Welcome to StyleUnikon.');
-      navigate('/account');
+      toast.success('Please check your email to verify your account before signing in.');
+      navigate('/login');
     }
   };
 
