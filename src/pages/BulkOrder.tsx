@@ -1,6 +1,7 @@
 import { Layout } from '@/components/Layout';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const BulkOrder = () => {
   const [form, setForm] = useState({
@@ -13,14 +14,36 @@ const BulkOrder = () => {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.companyName || !form.email || !form.quantity) {
       toast.error('Please fill in all required fields');
       return;
     }
-    // In production this would save to bulk_inquiries table
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from('bulk_inquiries')
+      .insert({
+        company_name: form.companyName,
+        contact_person: form.contactPerson || null,
+        phone: form.phone || null,
+        email: form.email,
+        quantity: parseInt(form.quantity),
+        instructions: form.instructions || null,
+      });
+
+    setLoading(false);
+
+    if (error) {
+      toast.error('Failed to submit inquiry. Please try again.');
+      console.error(error);
+      return;
+    }
+
     setSubmitted(true);
     toast.success('Inquiry submitted successfully!');
   };
@@ -29,7 +52,10 @@ const BulkOrder = () => {
     return (
       <Layout>
         <div className="px-8 lg:px-16 py-24 text-center">
-          <h1 className="text-4xl font-extrabold mb-4 text-accent">INQUIRY RECEIVED!</h1>
+          <div className="w-16 h-16 bg-accent flex items-center justify-center mx-auto mb-6">
+            <span className="font-heading text-2xl font-extrabold text-accent-foreground">✓</span>
+          </div>
+          <h1 className="text-4xl font-extrabold mb-4">INQUIRY <span className="text-accent">RECEIVED!</span></h1>
           <p className="font-body text-lg text-muted-foreground mb-8">
             Our team will contact you within 24 hours with a custom quote.
           </p>
@@ -47,11 +73,11 @@ const BulkOrder = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {[
-              { key: 'companyName', label: 'COMPANY NAME', type: 'text' },
+              { key: 'companyName', label: 'COMPANY NAME *', type: 'text' },
               { key: 'contactPerson', label: 'CONTACT PERSON', type: 'text' },
               { key: 'phone', label: 'PHONE', type: 'tel' },
-              { key: 'email', label: 'EMAIL', type: 'email' },
-              { key: 'quantity', label: 'QUANTITY (UNITS)', type: 'number' },
+              { key: 'email', label: 'EMAIL *', type: 'email' },
+              { key: 'quantity', label: 'QUANTITY (UNITS) *', type: 'number' },
             ].map(field => (
               <div key={field.key}>
                 <label className="font-heading text-xs font-bold uppercase block mb-2">{field.label}</label>
@@ -82,7 +108,9 @@ const BulkOrder = () => {
               />
             </div>
 
-            <button type="submit" className="btn-accent mt-4 text-center">SUBMIT INQUIRY</button>
+            <button type="submit" disabled={loading} className="btn-accent mt-4 text-center disabled:opacity-50">
+              {loading ? 'SUBMITTING...' : 'SUBMIT INQUIRY'}
+            </button>
           </form>
 
           <div className="border-2 border-foreground p-6 lg:sticky lg:top-20 lg:self-start bg-secondary">
