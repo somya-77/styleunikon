@@ -28,8 +28,11 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-primary-foreground/20 px-8 lg:px-12 py-4">
+      <div className="border-t border-primary-foreground/20 px-8 lg:px-12 py-4 flex items-center justify-between">
         <p className="font-body text-xs opacity-60">© {new Date().getFullYear()} StyleUnikon. All rights reserved.</p>
+        <Link to="/admin/login" className="font-body text-[10px] opacity-40 hover:opacity-80 transition-opacity">
+          Admin
+        </Link>
       </div>
     </footer>
   );
