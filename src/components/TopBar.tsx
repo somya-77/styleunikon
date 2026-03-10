@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, LogIn } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 
 const MOBILE_NAV = [
@@ -12,6 +13,7 @@ const MOBILE_NAV = [
 
 export function TopBar() {
   const { totalItems } = useCart();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -32,13 +34,29 @@ export function TopBar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/account"
-              className="p-2 border-2 border-transparent hover:border-foreground transition-all duration-200"
-              aria-label="Account"
-            >
-              <User size={18} />
-            </Link>
+            {user ? (
+              <Link
+                to="/account"
+                className="p-2 border-2 border-transparent hover:border-foreground transition-all duration-200 flex items-center gap-2"
+                aria-label="Account"
+              >
+                <div className="w-6 h-6 bg-accent flex items-center justify-center">
+                  <User size={12} className="text-accent-foreground" />
+                </div>
+                <span className="hidden md:inline font-heading text-[10px] font-bold uppercase">
+                  {user.email?.split('@')[0]}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="p-2 border-2 border-transparent hover:border-foreground transition-all duration-200 flex items-center gap-2"
+                aria-label="Sign in"
+              >
+                <LogIn size={18} />
+                <span className="hidden md:inline font-heading text-[10px] font-bold uppercase">Sign In</span>
+              </Link>
+            )}
             <Link
               to="/cart"
               className="p-2 border-2 border-transparent hover:border-foreground transition-all duration-200 relative"
@@ -69,6 +87,15 @@ export function TopBar() {
                 {item.label}
               </Link>
             ))}
+            {!user && (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="font-heading text-3xl font-extrabold py-4 border-b-2 border-foreground text-accent"
+              >
+                SIGN IN
+              </Link>
+            )}
           </nav>
         </div>
       )}
