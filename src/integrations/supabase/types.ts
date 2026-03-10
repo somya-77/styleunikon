@@ -14,6 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
+      bulk_inquiries: {
+        Row: {
+          company_name: string
+          contact_person: string | null
+          created_at: string
+          email: string
+          id: string
+          instructions: string | null
+          logo_url: string | null
+          phone: string | null
+          quantity: number
+          status: string
+        }
+        Insert: {
+          company_name: string
+          contact_person?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          instructions?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          quantity: number
+          status?: string
+        }
+        Update: {
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          instructions?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          quantity?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          color: string
+          created_at: string
+          custom_logo_url: string | null
+          custom_text: string | null
+          id: string
+          order_id: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          size: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          custom_logo_url?: string | null
+          custom_text?: string | null
+          id?: string
+          order_id: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity?: number
+          size: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          custom_logo_url?: string | null
+          custom_text?: string | null
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address: string
+          city: string | null
+          created_at: string
+          customer_email: string
+          customer_id: string | null
+          customer_name: string
+          id: string
+          payment_method: string
+          phone: string | null
+          status: string
+          total_price: number
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address: string
+          city?: string | null
+          created_at?: string
+          customer_email: string
+          customer_id?: string | null
+          customer_name: string
+          id?: string
+          payment_method?: string
+          phone?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_id?: string | null
+          customer_name?: string
+          id?: string
+          payment_method?: string
+          phone?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -50,15 +187,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +346,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
