@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 import { LogOut, Package, User, MapPin, ShoppingCart } from 'lucide-react';
 
@@ -12,46 +13,20 @@ const Account = () => {
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    }
-  }, [user, loading, navigate]);
+  useEffect(() => { if (!loading && !user) navigate('/login'); }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-        .then(({ data }) => setProfile(data));
-
-      supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .eq('customer_id', user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => setOrders(data || []));
+      supabase.from('profiles').select('*').eq('user_id', user.id).single().then(({ data }) => setProfile(data));
+      supabase.from('orders').select('*, order_items(*)').eq('customer_id', user.id).order('created_at', { ascending: false }).then(({ data }) => setOrders(data || []));
     }
   }, [user]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    toast.success('Signed out');
-    navigate('/');
-  };
+  const handleSignOut = async () => { await signOut(); toast.success('Signed out'); navigate('/'); };
 
   if (loading) {
-    return (
-      <Layout>
-        <div className="px-8 lg:px-16 py-24 text-center">
-          <p className="font-heading text-lg font-bold animate-pulse">LOADING...</p>
-        </div>
-      </Layout>
-    );
+    return (<Layout><div className="px-8 lg:px-16 py-24 text-center"><p className="font-heading text-lg font-bold animate-pulse">LOADING...</p></div></Layout>);
   }
-
   if (!user) return null;
 
   return (
@@ -65,18 +40,14 @@ const Account = () => {
             </h1>
           </div>
           <button onClick={handleSignOut} className="btn-outline flex items-center gap-2 text-xs py-2 px-4">
-            <LogOut size={14} />
-            SIGN OUT
+            <LogOut size={14} /> SIGN OUT
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-          {/* Profile Card */}
           <div className="border-2 border-foreground p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-accent flex items-center justify-center">
-                <User size={18} className="text-accent-foreground" />
-              </div>
+              <div className="w-10 h-10 bg-accent flex items-center justify-center"><User size={18} className="text-accent-foreground" /></div>
               <h3 className="font-heading text-sm font-bold uppercase">PROFILE</h3>
             </div>
             <div className="space-y-2 font-body text-sm">
@@ -85,13 +56,9 @@ const Account = () => {
               <p><span className="text-muted-foreground">Phone:</span> {profile?.phone || '—'}</p>
             </div>
           </div>
-
-          {/* Address Card */}
           <div className="border-2 border-foreground p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary flex items-center justify-center">
-                <MapPin size={18} className="text-primary-foreground" />
-              </div>
+              <div className="w-10 h-10 bg-primary flex items-center justify-center"><MapPin size={18} className="text-primary-foreground" /></div>
               <h3 className="font-heading text-sm font-bold uppercase">SAVED ADDRESS</h3>
             </div>
             <div className="space-y-2 font-body text-sm">
@@ -99,23 +66,18 @@ const Account = () => {
               {profile?.city && <p>{profile.city} {profile.zip_code}</p>}
             </div>
           </div>
-
-          {/* Stats Card */}
           <div className="border-2 border-foreground p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-secondary flex items-center justify-center">
-                <ShoppingCart size={18} />
-              </div>
+              <div className="w-10 h-10 bg-secondary flex items-center justify-center"><ShoppingCart size={18} /></div>
               <h3 className="font-heading text-sm font-bold uppercase">STATS</h3>
             </div>
             <div className="space-y-2 font-body text-sm">
               <p><span className="text-muted-foreground">Total Orders:</span> <strong>{orders.length}</strong></p>
-              <p><span className="text-muted-foreground">Total Spent:</span> <strong>${orders.reduce((s, o) => s + Number(o.total_price), 0)}</strong></p>
+              <p><span className="text-muted-foreground">Total Spent:</span> <strong>{formatPrice(orders.reduce((s, o) => s + Number(o.total_price), 0))}</strong></p>
             </div>
           </div>
         </div>
 
-        {/* Order History */}
         <h2 className="text-2xl font-extrabold mb-4">ORDER HISTORY</h2>
         {orders.length === 0 ? (
           <div className="border-2 border-foreground p-8 text-center">
@@ -138,16 +100,14 @@ const Account = () => {
                       order.status === 'shipped' ? 'bg-primary text-primary-foreground' :
                       order.status === 'processing' ? 'bg-secondary text-secondary-foreground' :
                       'bg-muted text-muted-foreground'
-                    }`}>
-                      {order.status}
-                    </span>
-                    <span className="font-heading text-lg font-extrabold">${order.total_price}</span>
+                    }`}>{order.status}</span>
+                    <span className="font-heading text-lg font-extrabold">{formatPrice(order.total_price)}</span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   {order.order_items?.map((item: any) => (
                     <p key={item.id} className="font-body text-xs">
-                      {item.product_name} — {item.color} / {item.size} × {item.quantity} — ${item.price * item.quantity}
+                      {item.product_name} — {item.color} / {item.size} × {item.quantity} — {formatPrice(item.price * item.quantity)}
                       {item.custom_text && <span className="text-muted-foreground"> (Custom: "{item.custom_text}")</span>}
                     </p>
                   ))}

@@ -15,10 +15,10 @@ export const COLORS = ['BLACK', 'WHITE', 'HEATHER GREY', 'NAVY', 'OLIVE', 'SAND'
 
 export const products: Product[] = [
   {
-    id: 'classic-cotton-tee',
-    name: 'Classic Cotton Tee',
-    description: 'Premium 100% organic cotton tee with a relaxed fit. Pre-shrunk and garment-dyed for a lived-in feel from day one. 220gsm heavyweight fabric.',
-    price: 45,
+    id: 'classic-white-printed-tee',
+    name: 'Classic White Printed Tee',
+    description: 'Premium 100% cotton tee with crisp print quality. Perfect for daily wear or custom branding. Comfortable, breathable, and built to last.',
+    price: 299,
     colors: ['BLACK', 'WHITE', 'HEATHER GREY', 'NAVY'],
     sizes: SIZES,
     images: [
@@ -30,10 +30,10 @@ export const products: Product[] = [
     category: 'essentials',
   },
   {
-    id: 'premium-oversized-tee',
-    name: 'Premium Oversized Tee',
-    description: 'Drop-shoulder oversized silhouette in 280gsm heavyweight cotton. Boxy cut with reinforced seams. The anti-basic basic.',
-    price: 65,
+    id: 'premium-black-graphic-tee',
+    name: 'Premium Black Graphic Tee',
+    description: 'Bold graphic print on heavyweight 240gsm cotton. Screen-printed for durability. A statement piece for streetwear lovers.',
+    price: 399,
     colors: ['BLACK', 'WHITE', 'SAND', 'OLIVE'],
     sizes: SIZES,
     images: [
@@ -42,13 +42,13 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=800&h=1000&fit=crop',
       'https://images.unsplash.com/photo-1503341504253-dff4f94032fc?w=800&h=1000&fit=crop',
     ],
-    category: 'oversized',
+    category: 'graphic',
   },
   {
-    id: 'streetwear-graphic-tee',
-    name: 'Streetwear Graphic Tee',
-    description: 'Screen-printed graphic on 240gsm cotton. Bold typography meets industrial design. Each print is hand-inspected for quality.',
-    price: 55,
+    id: 'corporate-logo-tee',
+    name: 'Corporate Logo Tee',
+    description: 'Clean corporate branding tee with premium DTG printing. Ideal for businesses, events, and team uniforms. Professional quality guaranteed.',
+    price: 349,
     colors: ['BLACK', 'WHITE', 'HEATHER GREY'],
     sizes: SIZES,
     images: [
@@ -57,13 +57,13 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1554568218-0f1715e72254?w=800&h=1000&fit=crop',
       'https://images.unsplash.com/photo-1618517351616-38fb9c5210c6?w=800&h=1000&fit=crop',
     ],
-    category: 'graphic',
+    category: 'corporate',
   },
   {
-    id: 'custom-print-tee',
-    name: 'Custom Print Tee',
-    description: 'Your canvas. Upload your design and we print it on premium 220gsm cotton using DTG technology for photo-quality results that last.',
-    price: 50,
+    id: 'oversized-streetwear-tee',
+    name: 'Oversized Streetwear Tee',
+    description: 'Drop-shoulder oversized fit in 280gsm heavyweight cotton. Boxy cut with reinforced seams. The ultimate streetwear essential.',
+    price: 499,
     colors: ['BLACK', 'WHITE', 'HEATHER GREY', 'NAVY', 'SAND'],
     sizes: SIZES,
     images: [
@@ -72,13 +72,13 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1564859228273-274232fdb516?w=800&h=1000&fit=crop',
       'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&h=1000&fit=crop',
     ],
-    category: 'custom',
+    category: 'oversized',
   },
   {
     id: 'minimal-logo-tee',
     name: 'Minimal Logo Tee',
     description: 'Subtle embroidered logo on the chest. Clean, understated, premium. Made from ring-spun cotton for an ultra-soft hand feel.',
-    price: 48,
+    price: 329,
     colors: ['BLACK', 'WHITE', 'OLIVE', 'NAVY'],
     sizes: SIZES,
     images: [
@@ -93,7 +93,7 @@ export const products: Product[] = [
     id: 'vintage-wash-tee',
     name: 'Vintage Wash Tee',
     description: 'Enzyme-washed for a broken-in vintage feel. 200gsm cotton with a slightly cropped hem. Looks like you\'ve owned it for years.',
-    price: 58,
+    price: 379,
     colors: ['BLACK', 'HEATHER GREY', 'SAND', 'OLIVE'],
     sizes: SIZES,
     images: [
@@ -108,4 +108,8 @@ export const products: Product[] = [
 
 export function getProductById(id: string): Product | undefined {
   return products.find(p => p.id === id);
+}
+
+export function formatPrice(price: number): string {
+  return `₹${price}`;
 }
