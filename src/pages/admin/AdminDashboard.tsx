@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 import {
   Package, ShoppingCart, Users, FileText,
@@ -9,7 +10,6 @@ import {
 } from 'lucide-react';
 
 type Tab = 'overview' | 'orders' | 'customers' | 'bulk';
-
 const STATUS_OPTIONS = ['pending', 'processing', 'shipped', 'delivered'];
 
 const AdminDashboard = () => {
@@ -18,32 +18,17 @@ const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>('overview');
-
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [bulkInquiries, setBulkInquiries] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  // Check admin access
   useEffect(() => {
     const checkAdmin = async () => {
       if (authLoading) return;
-      if (!user) {
-        navigate('/admin/login');
-        return;
-      }
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin');
-
-      if (data && data.length > 0) {
-        setIsAdmin(true);
-      } else {
-        navigate('/admin/login');
-        toast.error('Access denied');
-      }
+      if (!user) { navigate('/admin/login'); return; }
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin');
+      if (data && data.length > 0) { setIsAdmin(true); } else { navigate('/admin/login'); toast.error('Access denied'); }
       setChecking(false);
     };
     checkAdmin();
@@ -62,52 +47,32 @@ const AdminDashboard = () => {
     setLoadingData(false);
   };
 
-  useEffect(() => {
-    if (isAdmin) fetchData();
-  }, [isAdmin]);
+  useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   const updateOrderStatus = async (orderId: string, status: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
-    if (error) {
-      toast.error('Failed to update status');
-    } else {
-      toast.success(`Order status updated to ${status}`);
-      fetchData();
-    }
+    const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+    if (error) toast.error('Failed to update status');
+    else { toast.success(`Order status updated to ${status}`); fetchData(); }
   };
 
   const updateBulkStatus = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from('bulk_inquiries')
-      .update({ status })
-      .eq('id', id);
+    const { error } = await supabase.from('bulk_inquiries').update({ status }).eq('id', id);
     if (error) toast.error('Failed to update');
     else { toast.success('Updated'); fetchData(); }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/admin/login');
-  };
+  const handleSignOut = async () => { await signOut(); navigate('/admin/login'); };
 
   if (checking || authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="font-heading text-lg font-bold animate-pulse">VERIFYING ACCESS...</p>
-      </div>
-    );
+    return (<div className="min-h-screen bg-background flex items-center justify-center"><p className="font-heading text-lg font-bold animate-pulse">VERIFYING ACCESS...</p></div>);
   }
-
   if (!isAdmin) return null;
 
   const stats = [
     { label: 'TOTAL ORDERS', value: orders.length, icon: ShoppingCart },
     { label: 'CUSTOMERS', value: customers.length, icon: Users },
     { label: 'BULK INQUIRIES', value: bulkInquiries.length, icon: FileText },
-    { label: 'REVENUE', value: `$${orders.reduce((s, o) => s + Number(o.total_price), 0)}`, icon: Package },
+    { label: 'REVENUE', value: formatPrice(orders.reduce((s, o) => s + Number(o.total_price), 0)), icon: Package },
   ];
 
   const TABS: { key: Tab; label: string; icon: any }[] = [
@@ -119,15 +84,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Admin Header */}
       <header className="border-b-4 border-foreground bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link to="/" className="font-heading text-lg font-extrabold">
-            STYLE<span className="text-accent">UNIKON</span>
+            CUSTOMIZE<span className="text-accent"> T-SHIRT</span>
           </Link>
-          <span className="font-heading text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-1">
-            ADMIN
-          </span>
+          <span className="font-heading text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-1">ADMIN</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={fetchData} className="p-2 hover:bg-primary-foreground/10 transition-colors" title="Refresh">
@@ -140,43 +102,30 @@ const AdminDashboard = () => {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-56 border-r-2 border-foreground min-h-[calc(100vh-60px)] p-4 hidden md:block">
           <nav className="flex flex-col gap-1">
             {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
+              <button key={t.key} onClick={() => setTab(t.key)}
                 className={`flex items-center gap-3 px-4 py-3 font-heading text-xs font-bold uppercase text-left transition-all duration-200 border-2 ${
-                  tab === t.key
-                    ? 'border-foreground bg-primary text-primary-foreground'
-                    : 'border-transparent hover:border-foreground'
-                }`}
-              >
-                <t.icon size={14} />
-                {t.label}
+                  tab === t.key ? 'border-foreground bg-primary text-primary-foreground' : 'border-transparent hover:border-foreground'
+                }`}>
+                <t.icon size={14} />{t.label}
               </button>
             ))}
           </nav>
         </aside>
 
-        {/* Mobile tabs */}
         <div className="md:hidden flex border-b-2 border-foreground w-full overflow-x-auto">
           {TABS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-4 py-3 font-heading text-[10px] font-bold uppercase whitespace-nowrap border-b-2 ${
                 tab === t.key ? 'border-accent text-accent' : 'border-transparent'
-              }`}
-            >
-              <t.icon size={12} />
-              {t.label}
+              }`}>
+              <t.icon size={12} />{t.label}
             </button>
           ))}
         </div>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 lg:p-8">
           {tab === 'overview' && (
             <>
@@ -190,8 +139,6 @@ const AdminDashboard = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Recent Orders */}
               <h2 className="text-xl font-extrabold mb-4">RECENT ORDERS</h2>
               <div className="border-2 border-foreground overflow-x-auto">
                 <table className="w-full">
@@ -211,20 +158,16 @@ const AdminDashboard = () => {
                       <tr key={order.id} className="border-b border-foreground/20 hover:bg-secondary/50 transition-colors">
                         <td className="px-4 py-3 font-body text-xs font-mono">{order.id.slice(0, 8)}...</td>
                         <td className="px-4 py-3 font-body text-xs">{order.customer_name}</td>
-                        <td className="px-4 py-3 font-heading text-xs font-bold">${order.total_price}</td>
+                        <td className="px-4 py-3 font-heading text-xs font-bold">{formatPrice(order.total_price)}</td>
                         <td className="px-4 py-3">
                           <span className={`font-heading text-[10px] font-bold uppercase px-2 py-1 ${
                             order.status === 'delivered' ? 'bg-accent text-accent-foreground' :
                             order.status === 'shipped' ? 'bg-primary text-primary-foreground' :
                             order.status === 'processing' ? 'bg-secondary text-secondary-foreground' :
                             'bg-muted text-muted-foreground'
-                          }`}>
-                            {order.status}
-                          </span>
+                          }`}>{order.status}</span>
                         </td>
-                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </td>
+                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,21 +209,14 @@ const AdminDashboard = () => {
                             ))}
                           </div>
                         </td>
-                        <td className="px-4 py-3 font-heading text-xs font-bold">${order.total_price}</td>
+                        <td className="px-4 py-3 font-heading text-xs font-bold">{formatPrice(order.total_price)}</td>
                         <td className="px-4 py-3">
-                          <select
-                            value={order.status}
-                            onChange={e => updateOrderStatus(order.id, e.target.value)}
-                            className="border-2 border-foreground bg-background px-2 py-1 font-heading text-[10px] font-bold uppercase focus:outline-none focus:border-accent"
-                          >
-                            {STATUS_OPTIONS.map(s => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
+                          <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)}
+                            className="border-2 border-foreground bg-background px-2 py-1 font-heading text-[10px] font-bold uppercase focus:outline-none focus:border-accent">
+                            {STATUS_OPTIONS.map(s => (<option key={s} value={s}>{s}</option>))}
                           </select>
                         </td>
-                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </td>
+                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -310,9 +246,7 @@ const AdminDashboard = () => {
                         <td className="px-4 py-3 font-body text-xs font-semibold">{c.full_name || '—'}</td>
                         <td className="px-4 py-3 font-body text-xs">{c.phone || '—'}</td>
                         <td className="px-4 py-3 font-body text-xs">{c.address ? `${c.address}, ${c.city || ''}` : '—'}</td>
-                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString()}
-                        </td>
+                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -348,20 +282,15 @@ const AdminDashboard = () => {
                         <td className="px-4 py-3 font-heading text-xs font-bold">{b.quantity}</td>
                         <td className="px-4 py-3 font-body text-xs max-w-[200px] truncate">{b.instructions || '—'}</td>
                         <td className="px-4 py-3">
-                          <select
-                            value={b.status}
-                            onChange={e => updateBulkStatus(b.id, e.target.value)}
-                            className="border-2 border-foreground bg-background px-2 py-1 font-heading text-[10px] font-bold uppercase focus:outline-none focus:border-accent"
-                          >
+                          <select value={b.status} onChange={e => updateBulkStatus(b.id, e.target.value)}
+                            className="border-2 border-foreground bg-background px-2 py-1 font-heading text-[10px] font-bold uppercase focus:outline-none focus:border-accent">
                             <option value="new">NEW</option>
                             <option value="contacted">CONTACTED</option>
                             <option value="quoted">QUOTED</option>
                             <option value="completed">COMPLETED</option>
                           </select>
                         </td>
-                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">
-                          {new Date(b.created_at).toLocaleDateString()}
-                        </td>
+                        <td className="px-4 py-3 font-body text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

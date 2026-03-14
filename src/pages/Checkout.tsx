@@ -1,6 +1,7 @@
 import { Layout } from '@/components/Layout';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { formatPrice } from '@/data/products';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,89 +15,41 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    zip: '',
+    name: '', email: '', phone: '', address: '', city: '', zip: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.address) {
-      toast.error('Please fill in all required fields');
-      return;
+      toast.error('Please fill in all required fields'); return;
     }
-
-    if (!user) {
-      toast.error('Please sign in to place an order');
-      navigate('/login');
-      return;
-    }
+    if (!user) { toast.error('Please sign in to place an order'); navigate('/login'); return; }
 
     setLoading(true);
-
-    // Create order
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        customer_id: user.id,
-        customer_name: form.name,
-        customer_email: form.email,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        zip_code: form.zip,
-        total_price: totalPrice,
-        status: 'pending',
-        payment_method: 'COD',
+        customer_id: user.id, customer_name: form.name, customer_email: form.email,
+        phone: form.phone, address: form.address, city: form.city, zip_code: form.zip,
+        total_price: totalPrice, status: 'pending', payment_method: 'COD',
       })
-      .select()
-      .single();
+      .select().single();
 
-    if (orderError || !order) {
-      setLoading(false);
-      toast.error('Failed to place order. Please try again.');
-      console.error(orderError);
-      return;
-    }
+    if (orderError || !order) { setLoading(false); toast.error('Failed to place order.'); return; }
 
-    // Create order items
     const orderItems = items.map(item => ({
-      order_id: order.id,
-      product_id: item.productId,
-      product_name: item.name,
-      size: item.size,
-      color: item.color,
-      quantity: item.quantity,
-      price: item.price,
-      custom_text: item.customText || null,
-      custom_logo_url: item.customLogoUrl || null,
+      order_id: order.id, product_id: item.productId, product_name: item.name,
+      size: item.size, color: item.color, quantity: item.quantity, price: item.price,
+      custom_text: item.customText || null, custom_logo_url: item.customLogoUrl || null,
     }));
 
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
     setLoading(false);
+    if (itemsError) { toast.error('Order created but some items failed to save.'); }
 
-    if (itemsError) {
-      toast.error('Order created but some items failed to save.');
-      console.error(itemsError);
-    }
-
-    // Update profile address
-    await supabase
-      .from('profiles')
-      .update({
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        zip_code: form.zip,
-        full_name: form.name,
-      })
-      .eq('user_id', user.id);
+    await supabase.from('profiles').update({
+      phone: form.phone, address: form.address, city: form.city, zip_code: form.zip, full_name: form.name,
+    }).eq('user_id', user.id);
 
     setSubmitted(true);
     clearCart();
@@ -149,14 +102,13 @@ const Checkout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <h2 className="text-xl font-extrabold">SHIPPING DETAILS</h2>
-
             {[
               { key: 'name', label: 'FULL NAME *', type: 'text' },
               { key: 'email', label: 'EMAIL *', type: 'email' },
               { key: 'phone', label: 'PHONE NUMBER *', type: 'tel' },
               { key: 'address', label: 'ADDRESS *', type: 'text' },
               { key: 'city', label: 'CITY', type: 'text' },
-              { key: 'zip', label: 'ZIP CODE', type: 'text' },
+              { key: 'zip', label: 'PIN CODE', type: 'text' },
             ].map(field => (
               <div key={field.key}>
                 <label className="font-heading text-xs font-bold uppercase block mb-2">{field.label}</label>
@@ -177,7 +129,7 @@ const Checkout = () => {
             </div>
 
             <button type="submit" disabled={loading || !user} className="btn-accent mt-4 text-center disabled:opacity-50">
-              {loading ? 'PLACING ORDER...' : `PLACE ORDER — $${totalPrice}`}
+              {loading ? 'PLACING ORDER...' : `PLACE ORDER — ${formatPrice(totalPrice)}`}
             </button>
           </form>
 
@@ -187,12 +139,12 @@ const Checkout = () => {
             {items.map(item => (
               <div key={`${item.productId}-${item.size}-${item.color}`} className="flex justify-between font-body text-sm mb-2">
                 <span>{item.name} × {item.quantity}</span>
-                <span>${item.price * item.quantity}</span>
+                <span>{formatPrice(item.price * item.quantity)}</span>
               </div>
             ))}
             <div className="border-t-2 border-foreground mt-4 pt-4 flex justify-between">
               <span className="font-heading text-sm font-bold">TOTAL</span>
-              <span className="font-heading text-xl font-extrabold">${totalPrice}</span>
+              <span className="font-heading text-xl font-extrabold">{formatPrice(totalPrice)}</span>
             </div>
           </div>
         </div>

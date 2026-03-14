@@ -1,9 +1,10 @@
 import { Layout } from '@/components/Layout';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProductById } from '@/data/products';
+import { getProductById, formatPrice } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,14 +29,8 @@ const ProductPage = () => {
   }
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast.error('Please select a size');
-      return;
-    }
-    if (!selectedColor) {
-      toast.error('Please select a color');
-      return;
-    }
+    if (!selectedSize) { toast.error('Please select a size'); return; }
+    if (!selectedColor) { toast.error('Please select a color'); return; }
     addItem({
       productId: product.id,
       name: product.name,
@@ -60,13 +55,9 @@ const ProductPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
           {/* Images */}
-          <div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
             <div className="border-2 border-foreground mb-4 aspect-[4/5] overflow-hidden bg-secondary">
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
             </div>
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((img, i) => (
@@ -81,16 +72,18 @@ const ProductPage = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          {/* Product Info - Sticky sidebar */}
-          <div className="lg:sticky lg:top-20 lg:self-start border-2 border-foreground p-6">
+          {/* Product Info */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:sticky lg:top-20 lg:self-start border-2 border-foreground p-6"
+          >
             <h1 className="text-2xl font-extrabold mb-2">{product.name}</h1>
-            <p className="font-heading text-3xl font-extrabold text-accent mb-6">${product.price}</p>
-
-            <p className="font-body text-sm leading-relaxed text-muted-foreground mb-8">
-              {product.description}
-            </p>
+            <p className="font-heading text-3xl font-extrabold text-accent mb-6">{formatPrice(product.price)}</p>
+            <p className="font-body text-sm leading-relaxed text-muted-foreground mb-8">{product.description}</p>
 
             {/* Color */}
             <div className="mb-6">
@@ -136,26 +129,16 @@ const ProductPage = () => {
             <div className="mb-8">
               <h3 className="font-heading text-xs font-bold uppercase mb-3">QUANTITY</h3>
               <div className="flex items-center border-2 border-foreground inline-flex">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-3 font-heading font-bold hover:bg-accent transition-colors"
-                >
-                  −
-                </button>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-3 font-heading font-bold hover:bg-accent transition-colors">−</button>
                 <span className="px-6 py-3 font-heading font-bold border-x-2 border-foreground">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-3 font-heading font-bold hover:bg-accent transition-colors"
-                >
-                  +
-                </button>
+                <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-3 font-heading font-bold hover:bg-accent transition-colors">+</button>
               </div>
             </div>
 
             <button onClick={handleAddToCart} className="btn-accent w-full text-center">
-              ADD TO CART — ${product.price * quantity}
+              ADD TO CART — {formatPrice(product.price * quantity)}
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
     </Layout>
