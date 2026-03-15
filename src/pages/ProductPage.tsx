@@ -5,6 +5,7 @@ import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { ShieldCheck, Truck, RefreshCw } from 'lucide-react';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,7 @@ const ProductPage = () => {
   const handleAddToCart = () => {
     if (!selectedSize) { toast.error('Please select a size'); return; }
     if (!selectedColor) { toast.error('Please select a color'); return; }
+    if (!product.inStock) { toast.error('This product is out of stock'); return; }
     addItem({
       productId: product.id,
       name: product.name,
@@ -59,19 +61,21 @@ const ProductPage = () => {
             <div className="border-2 border-foreground mb-4 aspect-[4/5] overflow-hidden bg-secondary">
               <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`border-2 aspect-square overflow-hidden transition-all duration-200 ${
-                    selectedImage === i ? 'border-accent' : 'border-foreground opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            {product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`border-2 aspect-square overflow-hidden transition-all duration-200 ${
+                      selectedImage === i ? 'border-accent' : 'border-foreground opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Product Info */}
@@ -79,10 +83,24 @@ const ProductPage = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:sticky lg:top-20 lg:self-start border-2 border-foreground p-6"
+            className="lg:sticky lg:top-20 lg:self-start glass-card p-6"
           >
             <h1 className="text-2xl font-extrabold mb-2">{product.name}</h1>
-            <p className="font-heading text-3xl font-extrabold text-accent mb-6">{formatPrice(product.price)}</p>
+            <p className="font-heading text-3xl font-extrabold text-accent mb-2">{formatPrice(product.price)}</p>
+
+            {/* Stock Status */}
+            <div className="mb-6">
+              {product.inStock ? (
+                <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-green-600 bg-green-100 px-3 py-1">
+                  ● In Stock ({product.stockQty} available)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-destructive bg-destructive/10 px-3 py-1">
+                  ● Out of Stock
+                </span>
+              )}
+            </div>
+
             <p className="font-body text-sm leading-relaxed text-muted-foreground mb-8">{product.description}</p>
 
             {/* Color */}
@@ -135,9 +153,27 @@ const ProductPage = () => {
               </div>
             </div>
 
-            <button onClick={handleAddToCart} className="btn-accent w-full text-center">
-              ADD TO CART — {formatPrice(product.price * quantity)}
+            <button
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              className="btn-accent w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {product.inStock ? `ADD TO CART — ${formatPrice(product.price * quantity)}` : 'OUT OF STOCK'}
             </button>
+
+            {/* Trust badges */}
+            <div className="grid grid-cols-3 gap-2 mt-6 pt-6 border-t-2 border-foreground/20">
+              {[
+                { icon: ShieldCheck, label: 'Quality Assured' },
+                { icon: Truck, label: 'Fast Shipping' },
+                { icon: RefreshCw, label: 'Easy Returns' },
+              ].map(b => (
+                <div key={b.label} className="text-center">
+                  <b.icon size={16} className="mx-auto text-accent mb-1" />
+                  <p className="font-body text-[9px] text-muted-foreground uppercase">{b.label}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </div>

@@ -151,6 +151,54 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          in_stock: boolean
+          name: string
+          price: number
+          sizes: string[] | null
+          slug: string
+          stock_qty: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          in_stock?: boolean
+          name: string
+          price?: number
+          sizes?: string[] | null
+          slug: string
+          stock_qty?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          in_stock?: boolean
+          name?: string
+          price?: number
+          sizes?: string[] | null
+          slug?: string
+          stock_qty?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -159,6 +207,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          state: string | null
           updated_at: string
           user_id: string
           zip_code: string | null
@@ -170,6 +219,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          state?: string | null
           updated_at?: string
           user_id: string
           zip_code?: string | null
@@ -181,9 +231,40 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          state?: string | null
           updated_at?: string
           user_id?: string
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      saved_designs: {
+        Row: {
+          created_at: string
+          design_data: Json
+          id: string
+          name: string
+          preview_url: string | null
+          product_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          design_data?: Json
+          id?: string
+          name?: string
+          preview_url?: string | null
+          product_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          design_data?: Json
+          id?: string
+          name?: string
+          preview_url?: string | null
+          product_type?: string
+          user_id?: string
         }
         Relationships: []
       }
