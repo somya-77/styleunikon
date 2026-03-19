@@ -1,3 +1,8 @@
+import noRulesTee from '@/assets/products/no-rules-tee.png';
+import illusionTee from '@/assets/products/illusion-tee.png';
+import unleashedTee from '@/assets/products/unleashed-tee.png';
+import elevateTee from '@/assets/products/elevate-tee.png';
+
 export interface Product {
   id: string;
   name: string;
@@ -9,6 +14,7 @@ export interface Product {
   category: string;
   stockQty: number;
   inStock: boolean;
+  badge?: 'new' | 'bestseller' | 'limited';
 }
 
 export const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -27,12 +33,66 @@ export const CATEGORIES = [
   { id: 'corporate', label: 'Corporate Gifts' },
 ];
 
+// Placeholder for products without real images
+export const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" fill="#f3f4f6"><rect width="800" height="1000"/><text x="400" y="480" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#9ca3af">Upload Product Image</text><text x="400" y="520" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#d1d5db">800 × 1000</text></svg>`);
+
 export const products: Product[] = [
   // T-Shirts
   {
+    id: 'no-rules-oversized-tee',
+    name: 'No Rules Oversized Tee',
+    description: 'Astronaut graphic oversized tee in 280gsm heavyweight cotton. Drop-shoulder fit with bold "No Rules" print. A streetwear essential.',
+    price: 499,
+    colors: ['OLIVE', 'BLACK', 'WHITE', 'SAND'],
+    sizes: SIZES,
+    images: [noRulesTee, illusionTee, unleashedTee, elevateTee],
+    category: 'tshirts',
+    stockQty: 60,
+    inStock: true,
+    badge: 'bestseller',
+  },
+  {
+    id: 'illusion-graphic-tee',
+    name: 'Illusion Graphic Tee',
+    description: 'Psychedelic skull mushroom design on premium cotton. Vibrant DTG print in neon pink and cyan. Stand out from the crowd.',
+    price: 449,
+    colors: ['SAND', 'BLACK', 'HEATHER GREY'],
+    sizes: SIZES,
+    images: [illusionTee, noRulesTee, elevateTee, unleashedTee],
+    category: 'tshirts',
+    stockQty: 80,
+    inStock: true,
+    badge: 'new',
+  },
+  {
+    id: 'unleashed-bulldog-tee',
+    name: 'Unleashed Bulldog Tee',
+    description: 'Vintage college-style bulldog graphic on cream cotton. Screen-printed for durability. Bold statement piece.',
+    price: 399,
+    colors: ['WHITE', 'BLACK', 'HEATHER GREY', 'NAVY'],
+    sizes: SIZES,
+    images: [unleashedTee, noRulesTee, illusionTee, elevateTee],
+    category: 'tshirts',
+    stockQty: 100,
+    inStock: true,
+  },
+  {
+    id: 'elevate-octopus-tee',
+    name: 'Elevate Octopus Tee',
+    description: 'Cosmic octopus boombox design in electric green and purple. Full back print on heavyweight cotton. Music meets streetwear.',
+    price: 479,
+    colors: ['SAND', 'BLACK', 'OLIVE'],
+    sizes: SIZES,
+    images: [elevateTee, illusionTee, unleashedTee, noRulesTee],
+    category: 'tshirts',
+    stockQty: 70,
+    inStock: true,
+    badge: 'new',
+  },
+  {
     id: 'classic-white-printed-tee',
     name: 'Classic White Printed Tee',
-    description: 'Premium 100% cotton tee with crisp print quality. Perfect for daily wear or custom branding. Comfortable, breathable, and built to last.',
+    description: 'Premium 100% cotton tee with crisp print quality. Perfect for daily wear or custom branding.',
     price: 299,
     colors: ['BLACK', 'WHITE', 'HEATHER GREY', 'NAVY'],
     sizes: SIZES,
@@ -43,21 +103,6 @@ export const products: Product[] = [
     ],
     category: 'tshirts',
     stockQty: 100,
-    inStock: true,
-  },
-  {
-    id: 'premium-black-graphic-tee',
-    name: 'Premium Black Graphic Tee',
-    description: 'Bold graphic print on heavyweight 240gsm cotton. Screen-printed for durability. A statement piece for streetwear lovers.',
-    price: 399,
-    colors: ['BLACK', 'WHITE', 'SAND', 'OLIVE'],
-    sizes: SIZES,
-    images: [
-      'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=1000&fit=crop',
-      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=1000&fit=crop',
-    ],
-    category: 'tshirts',
-    stockQty: 80,
     inStock: true,
   },
   {
@@ -75,54 +120,11 @@ export const products: Product[] = [
     stockQty: 120,
     inStock: true,
   },
-  {
-    id: 'oversized-streetwear-tee',
-    name: 'Oversized Streetwear Tee',
-    description: 'Drop-shoulder oversized fit in 280gsm heavyweight cotton. Boxy cut with reinforced seams.',
-    price: 499,
-    colors: ['BLACK', 'WHITE', 'HEATHER GREY', 'NAVY', 'SAND'],
-    sizes: SIZES,
-    images: [
-      'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=800&h=1000&fit=crop',
-      'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&h=1000&fit=crop',
-    ],
-    category: 'tshirts',
-    stockQty: 60,
-    inStock: true,
-  },
-  {
-    id: 'minimal-logo-tee',
-    name: 'Minimal Logo Tee',
-    description: 'Subtle embroidered logo on the chest. Clean, understated, premium.',
-    price: 329,
-    colors: ['BLACK', 'WHITE', 'OLIVE', 'NAVY'],
-    sizes: SIZES,
-    images: [
-      'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&h=1000&fit=crop',
-    ],
-    category: 'tshirts',
-    stockQty: 90,
-    inStock: true,
-  },
-  {
-    id: 'vintage-wash-tee',
-    name: 'Vintage Wash Tee',
-    description: 'Enzyme-washed for a broken-in vintage feel. 200gsm cotton.',
-    price: 379,
-    colors: ['BLACK', 'HEATHER GREY', 'SAND', 'OLIVE'],
-    sizes: SIZES,
-    images: [
-      'https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?w=800&h=1000&fit=crop',
-    ],
-    category: 'tshirts',
-    stockQty: 70,
-    inStock: true,
-  },
   // Mugs
   {
     id: 'custom-coffee-mug',
     name: 'Custom Coffee Mug',
-    description: 'High-quality ceramic mug with your custom design. Dishwasher safe. Perfect morning companion.',
+    description: 'High-quality ceramic mug with your custom design. Dishwasher safe.',
     price: 249,
     colors: ['WHITE', 'BLACK'],
     sizes: MUG_SIZES,
@@ -133,6 +135,7 @@ export const products: Product[] = [
     category: 'mugs',
     stockQty: 200,
     inStock: true,
+    badge: 'bestseller',
   },
   {
     id: 'premium-photo-mug',
@@ -151,7 +154,7 @@ export const products: Product[] = [
   {
     id: 'corporate-logo-mug',
     name: 'Corporate Logo Mug',
-    description: 'Professional branding on premium ceramic. Ideal for corporate gifts and office use.',
+    description: 'Professional branding on premium ceramic. Ideal for corporate gifts.',
     price: 299,
     colors: ['WHITE', 'BLACK'],
     sizes: MUG_SIZES,
@@ -181,7 +184,7 @@ export const products: Product[] = [
   {
     id: 'engraved-wooden-frame',
     name: 'Engraved Wooden Frame',
-    description: 'Laser-engraved premium wooden frame. Perfect for anniversaries, weddings, and special occasions.',
+    description: 'Laser-engraved premium wooden frame. Perfect for anniversaries and weddings.',
     price: 499,
     colors: ['Natural Wood', 'Dark Walnut'],
     sizes: FRAME_SIZES,
@@ -196,7 +199,7 @@ export const products: Product[] = [
   {
     id: 'custom-wooden-keychain',
     name: 'Custom Wooden Keychain',
-    description: 'Compact wooden keychain with custom engraving. Lightweight and durable everyday carry.',
+    description: 'Compact wooden keychain with custom engraving. Lightweight and durable.',
     price: 149,
     colors: ['Natural Wood', 'Dark Walnut', 'Bamboo'],
     sizes: KEYCHAIN_SIZES,
@@ -225,7 +228,7 @@ export const products: Product[] = [
   {
     id: 'corporate-gift-set',
     name: 'Corporate Gift Set',
-    description: 'Premium gift set with custom mug, keychain, and branded packaging. Perfect for employees and clients.',
+    description: 'Premium gift set with custom mug, keychain, and branded packaging.',
     price: 799,
     colors: ['Standard'],
     sizes: ['Standard Set', 'Premium Set'],
@@ -235,6 +238,7 @@ export const products: Product[] = [
     category: 'corporate',
     stockQty: 50,
     inStock: true,
+    badge: 'limited',
   },
   {
     id: 'branded-combo-pack',
