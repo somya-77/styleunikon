@@ -1,11 +1,11 @@
 import { Layout } from '@/components/Layout';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProductById, formatPrice } from '@/data/products';
+import { getProductById, formatPrice, PLACEHOLDER_IMAGE } from '@/data/products';
 import { useCart } from '@/context/CartContext';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldCheck, Truck, RefreshCw, ZoomIn } from 'lucide-react';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +17,9 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imgRef = useRef<HTMLDivElement>(null);
 
   if (!product) {
     return (
@@ -29,6 +32,16 @@ const ProductPage = () => {
     );
   }
 
+  const images = product.images.length > 0 ? product.images : [PLACEHOLDER_IMAGE];
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imgRef.current) return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
   const handleAddToCart = () => {
     if (!selectedSize) { toast.error('Please select a size'); return; }
     if (!selectedColor) { toast.error('Please select a color'); return; }
@@ -40,7 +53,7 @@ const ProductPage = () => {
       size: selectedSize,
       color: selectedColor,
       quantity,
-      image: product.images[0],
+      image: images[0],
     });
     toast.success(`${product.name} added to cart`);
   };
@@ -58,20 +71,59 @@ const ProductPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
           {/* Images */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-            <div className="border-2 border-foreground mb-4 aspect-[4/5] overflow-hidden bg-secondary">
-              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+            {/* Main image with zoom */}
+            <div
+              ref={imgRef}
+              className="border-2 border-foreground mb-4 aspect-[4/5] overflow-hidden bg-secondary relative cursor-zoom-in group"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleMouseMove}
+            >
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={selectedImage}
+                  src={images[selectedImage]}
+                  alt={product.name}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full h-full object-cover"
+                  style={isZoomed ? {
+                    transform: 'scale(2)',
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    transition: 'transform-origin 0.1s ease',
+                  } : {
+                    transform: 'scale(1)',
+                    transition: 'transform 0.3s ease',
+                  }}
+                />
+              </AnimatePresence>
+              <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <ZoomIn size={16} className="text-foreground" />
+              </div>
+              {product.badge && (
+                <span className={`absolute top-3 left-3 font-heading text-[10px] font-bold uppercase px-3 py-1 z-10 ${
+                  product.badge === 'new' ? 'bg-accent text-accent-foreground' :
+                  product.badge === 'bestseller' ? 'bg-primary text-primary-foreground' :
+                  'bg-destructive text-destructive-foreground'
+                }`}>
+                  {product.badge === 'new' ? 'NEW' : product.badge === 'bestseller' ? 'BEST SELLER' : 'LIMITED'}
+                </span>
+              )}
             </div>
-            {product.images.length > 1 && (
+            {/* Thumbnails */}
+            {images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {product.images.map((img, i) => (
+                {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
                     className={`border-2 aspect-square overflow-hidden transition-all duration-200 ${
-                      selectedImage === i ? 'border-accent' : 'border-foreground opacity-60 hover:opacity-100'
+                      selectedImage === i ? 'border-accent ring-2 ring-accent/30' : 'border-foreground/30 opacity-60 hover:opacity-100 hover:border-foreground'
                     }`}
                   >
-                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -88,7 +140,6 @@ const ProductPage = () => {
             <h1 className="text-2xl font-extrabold mb-2">{product.name}</h1>
             <p className="font-heading text-3xl font-extrabold text-accent mb-2">{formatPrice(product.price)}</p>
 
-            {/* Stock Status */}
             <div className="mb-6">
               {product.inStock ? (
                 <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-green-600 bg-green-100 px-3 py-1">

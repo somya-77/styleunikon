@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +6,7 @@ import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 import {
   Package, ShoppingCart, Users, FileText,
-  LogOut, RefreshCw, Eye, Plus, Trash2, Edit2, Save
+  LogOut, RefreshCw, Eye, Plus, Trash2, Save, Upload, X, Image as ImageIcon
 } from 'lucide-react';
 
 type Tab = 'overview' | 'orders' | 'customers' | 'bulk' | 'products';
@@ -29,9 +29,12 @@ const AdminDashboard = () => {
   const [loadingData, setLoadingData] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [newProduct, setNewProduct] = useState({
     slug: '', name: '', description: '', price: 299, category: 'tshirts',
-    stock_qty: 50, in_stock: true, images: [''],
+    stock_qty: 50, in_stock: true, images: [] as string[],
   });
 
   useEffect(() => {
@@ -74,6 +77,48 @@ const AdminDashboard = () => {
     else { toast.success('Updated'); fetchData(); }
   };
 
+  const uploadImages = async (files: FileList): Promise<string[]> => {
+    setUploadingImages(true);
+    const urls: string[] = [];
+    for (const file of Array.from(files)) {
+      const ext = file.name.split('.').pop();
+      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('product-images').upload(path, file);
+      if (error) { toast.error(`Failed to upload ${file.name}`); continue; }
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path);
+      urls.push(urlData.publicUrl);
+    }
+    setUploadingImages(false);
+    return urls;
+  };
+
+  const handleNewProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const urls = await uploadImages(e.target.files);
+    setNewProduct(prev => ({ ...prev, images: [...prev.images, ...urls] }));
+  };
+
+  const handleProductImageUpload = async (productId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const product = dbProducts.find(p => p.id === productId);
+    if (!product) return;
+    const urls = await uploadImages(e.target.files);
+    const newImages = [...(product.images || []), ...urls];
+    const { error } = await supabase.from('products').update({ images: newImages } as any).eq('id', productId);
+    if (error) toast.error('Failed to update images');
+    else { toast.success('Images uploaded!'); fetchData(); }
+  };
+
+  const handleDeleteImage = async (productId: string, imageIndex: number) => {
+    const product = dbProducts.find(p => p.id === productId);
+    if (!product) return;
+    const newImages = [...(product.images || [])];
+    newImages.splice(imageIndex, 1);
+    const { error } = await supabase.from('products').update({ images: newImages } as any).eq('id', productId);
+    if (error) toast.error('Failed to remove image');
+    else { toast.success('Image removed'); fetchData(); }
+  };
+
   const handleAddProduct = async () => {
     if (!newProduct.slug || !newProduct.name) { toast.error('Name and slug required'); return; }
     const { error } = await supabase.from('products').insert({
@@ -85,7 +130,7 @@ const AdminDashboard = () => {
     if (error) { toast.error('Failed to add product: ' + error.message); return; }
     toast.success('Product added!');
     setShowAddProduct(false);
-    setNewProduct({ slug: '', name: '', description: '', price: 299, category: 'tshirts', stock_qty: 50, in_stock: true, images: [''] });
+    setNewProduct({ slug: '', name: '', description: '', price: 299, category: 'tshirts', stock_qty: 50, in_stock: true, images: [] });
     fetchData();
   };
 
@@ -172,6 +217,7 @@ const AdminDashboard = () => {
         </div>
 
         <main className="flex-1 p-6 lg:p-8">
+          {/* ===== OVERVIEW ===== */}
           {tab === 'overview' && (
             <>
               <h1 className="text-3xl font-extrabold mb-6">DASHBOARD</h1>
@@ -220,6 +266,7 @@ const AdminDashboard = () => {
             </>
           )}
 
+          {/* ===== ORDERS ===== */}
           {tab === 'orders' && (
             <>
               <h1 className="text-3xl font-extrabold mb-6">ALL ORDERS</h1>
@@ -271,6 +318,7 @@ const AdminDashboard = () => {
             </>
           )}
 
+          {/* ===== PRODUCTS ===== */}
           {tab === 'products' && (
             <>
               <div className="flex items-center justify-between mb-6">
@@ -316,9 +364,26 @@ const AdminDashboard = () => {
                         className="w-full border-2 border-foreground bg-background px-3 py-2 text-sm" />
                     </div>
                     <div>
-                      <label className="font-heading text-[10px] font-bold uppercase block mb-1">IMAGE URL</label>
-                      <input value={newProduct.images[0]} onChange={e => setNewProduct({...newProduct, images: [e.target.value]})}
-                        className="w-full border-2 border-foreground bg-background px-3 py-2 text-sm" placeholder="https://..." />
+                      <label className="font-heading text-[10px] font-bold uppercase block mb-1">PRODUCT IMAGES</label>
+                      <input type="file" ref={fileInputRef} multiple accept="image/*" onChange={handleNewProductImageUpload} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} disabled={uploadingImages}
+                        className="w-full border-2 border-dashed border-foreground/50 bg-background px-3 py-4 text-sm flex items-center justify-center gap-2 hover:border-accent transition-colors disabled:opacity-50">
+                        <Upload size={16} />
+                        {uploadingImages ? 'Uploading...' : 'Click to upload images'}
+                      </button>
+                      {newProduct.images.length > 0 && (
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                          {newProduct.images.map((img, i) => (
+                            <div key={i} className="relative w-16 h-16 border border-foreground group">
+                              <img src={img} className="w-full h-full object-cover" alt="" />
+                              <button onClick={() => setNewProduct(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
+                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="md:col-span-2">
                       <label className="font-heading text-[10px] font-bold uppercase block mb-1">DESCRIPTION</label>
@@ -335,56 +400,73 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="border-2 border-foreground overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2 border-foreground bg-secondary">
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Product</th>
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Category</th>
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Price</th>
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Stock</th>
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Status</th>
-                      <th className="text-left px-4 py-3 font-heading text-[10px] font-bold uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dbProducts.length === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center font-body text-sm text-muted-foreground">No products in database. Add some above!</td></tr>
-                    ) : dbProducts.map(p => (
-                      <tr key={p.id} className="border-b border-foreground/20 hover:bg-secondary/50 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            {p.images?.[0] && <img src={p.images[0]} className="w-10 h-10 object-cover border border-foreground" alt="" />}
-                            <div>
-                              <p className="font-body text-xs font-semibold">{p.name}</p>
-                              <p className="font-body text-[10px] text-muted-foreground">{p.slug}</p>
-                            </div>
+              <div className="space-y-4">
+                {dbProducts.length === 0 ? (
+                  <div className="border-2 border-foreground px-4 py-12 text-center">
+                    <ImageIcon size={32} className="mx-auto text-muted-foreground mb-3" />
+                    <p className="font-body text-sm text-muted-foreground">No products in database. Add some above!</p>
+                  </div>
+                ) : dbProducts.map(p => (
+                  <div key={p.id} className="glass-card p-4">
+                    <div className="flex items-start gap-4">
+                      {/* Product images grid */}
+                      <div className="flex gap-2 flex-wrap min-w-[120px]">
+                        {(p.images && p.images.length > 0) ? p.images.map((img: string, i: number) => (
+                          <div key={i} className="relative w-14 h-14 border border-foreground group">
+                            <img src={img} className="w-full h-full object-cover" alt="" />
+                            <button onClick={() => handleDeleteImage(p.id, i)}
+                              className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove image">
+                              <X size={8} />
+                            </button>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 font-heading text-[10px] font-bold uppercase">{p.category}</td>
-                        <td className="px-4 py-3 font-heading text-xs font-bold">{formatPrice(p.price)}</td>
-                        <td className="px-4 py-3">
-                          <input type="number" value={p.stock_qty} className="w-16 border-2 border-foreground bg-background px-2 py-1 text-xs"
-                            onChange={e => handleUpdateStock(p.id, parseInt(e.target.value) || 0)} />
-                        </td>
-                        <td className="px-4 py-3">
+                        )) : (
+                          <div className="w-14 h-14 border border-dashed border-foreground/30 flex items-center justify-center bg-muted">
+                            <ImageIcon size={16} className="text-muted-foreground" />
+                          </div>
+                        )}
+                        {/* Add more images button */}
+                        <input type="file" ref={editingProduct === p.id ? editFileInputRef : undefined} multiple accept="image/*"
+                          onChange={(e) => handleProductImageUpload(p.id, e)} className="hidden" id={`file-${p.id}`} />
+                        <button onClick={() => { setEditingProduct(p.id); setTimeout(() => document.getElementById(`file-${p.id}`)?.click(), 0); }}
+                          disabled={uploadingImages}
+                          className="w-14 h-14 border border-dashed border-foreground/50 flex items-center justify-center hover:border-accent hover:text-accent transition-colors"
+                          title="Upload more images">
+                          <Upload size={14} />
+                        </button>
+                      </div>
+
+                      {/* Product info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-heading text-sm font-bold truncate">{p.name}</h4>
+                          <span className="font-heading text-[10px] font-bold uppercase px-2 py-0.5 bg-secondary text-muted-foreground">{p.category}</span>
+                        </div>
+                        <p className="font-body text-xs text-muted-foreground truncate">{p.slug}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <span className="font-heading text-sm font-extrabold text-accent">{formatPrice(p.price)}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="font-heading text-[10px] font-bold uppercase text-muted-foreground">Stock:</span>
+                            <input type="number" value={p.stock_qty} className="w-16 border-2 border-foreground bg-background px-2 py-1 text-xs"
+                              onChange={e => handleUpdateStock(p.id, parseInt(e.target.value) || 0)} />
+                          </div>
                           <span className={`font-heading text-[10px] font-bold uppercase px-2 py-1 ${
                             p.in_stock ? 'bg-accent/20 text-accent-foreground' : 'bg-destructive/20 text-destructive'
                           }`}>{p.in_stock ? 'In Stock' : 'Out of Stock'}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <button onClick={() => handleDeleteProduct(p.id)} className="p-1 hover:text-destructive transition-colors">
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+
+                      {/* Delete */}
+                      <button onClick={() => handleDeleteProduct(p.id)} className="p-2 hover:text-destructive transition-colors" title="Delete product">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </>
           )}
 
+          {/* ===== CUSTOMERS ===== */}
           {tab === 'customers' && (
             <>
               <h1 className="text-3xl font-extrabold mb-6">CUSTOMERS</h1>
@@ -421,6 +503,7 @@ const AdminDashboard = () => {
             </>
           )}
 
+          {/* ===== BULK ===== */}
           {tab === 'bulk' && (
             <>
               <h1 className="text-3xl font-extrabold mb-6">BULK INQUIRIES</h1>
