@@ -1,20 +1,31 @@
 import { Layout } from '@/components/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
 
 const Signup = () => {
-  const { signUp, user } = useAuth();
+  const { signUp, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '', phone: '' });
   const [loading, setLoading] = useState(false);
 
-  if (user) {
-    navigate('/account');
-    return null;
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/account', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
