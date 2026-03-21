@@ -6,6 +6,7 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Truck, RefreshCw, ZoomIn } from 'lucide-react';
+import { StockBadge } from '@/components/StockBadge';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
