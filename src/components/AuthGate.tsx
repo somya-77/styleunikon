@@ -22,6 +22,11 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  // Admin routes: redirect to admin login, not customer login
+  if (!user && location.pathname.startsWith('/admin')) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
   if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }

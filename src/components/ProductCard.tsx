@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Product, formatPrice, PLACEHOLDER_IMAGE } from '@/data/products';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { StockBadge } from '@/components/StockBadge';
 
 const BADGE_STYLES: Record<string, string> = {
   new: 'bg-accent text-accent-foreground',
@@ -62,7 +63,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <h3 className="font-heading text-sm font-bold uppercase tracking-wider">{product.name}</h3>
           <div className="flex items-center justify-between mt-2">
             <span className="font-heading text-sm font-extrabold text-accent">{formatPrice(product.price)}</span>
-            <span className="font-body text-[10px] text-muted-foreground uppercase">{product.category}</span>
+            <StockBadge stockQty={product.stockQty} inStock={product.inStock} compact />
           </div>
         </div>
       </Link>

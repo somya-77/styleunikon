@@ -6,7 +6,7 @@ import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 import {
   Package, ShoppingCart, Users, FileText,
-  LogOut, RefreshCw, Eye, Plus, Trash2, Save, Upload, X, Image as ImageIcon
+  LogOut, RefreshCw, Eye, Plus, Trash2, Save, Upload, X, Image as ImageIcon, AlertTriangle
 } from 'lucide-react';
 
 type Tab = 'overview' | 'orders' | 'customers' | 'bulk' | 'products';
@@ -230,6 +230,22 @@ const AdminDashboard = () => {
                   </div>
                 ))}
               </div>
+              <h2 className="text-xl font-extrabold mb-4">LOW STOCK ALERTS</h2>
+              {dbProducts.filter(p => p.stock_qty <= 20).length === 0 ? (
+                <p className="font-body text-sm text-muted-foreground mb-8">All products are well stocked ✓</p>
+              ) : (
+                <div className="border-2 border-orange-300 bg-orange-50/50 p-4 mb-8">
+                  {dbProducts.filter(p => p.stock_qty <= 20).map(p => (
+                    <div key={p.id} className="flex items-center justify-between py-2 border-b border-orange-200 last:border-0">
+                      <span className="font-heading text-xs font-bold">{p.name}</span>
+                      <span className={`font-heading text-xs font-bold ${p.stock_qty <= 0 ? 'text-destructive' : 'text-orange-600'}`}>
+                        {p.stock_qty <= 0 ? 'OUT OF STOCK' : `${p.stock_qty} left`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <h2 className="text-xl font-extrabold mb-4">RECENT ORDERS</h2>
               <div className="border-2 border-foreground overflow-x-auto">
                 <table className="w-full">
@@ -449,9 +465,15 @@ const AdminDashboard = () => {
                             <input type="number" value={p.stock_qty} className="w-16 border-2 border-foreground bg-background px-2 py-1 text-xs"
                               onChange={e => handleUpdateStock(p.id, parseInt(e.target.value) || 0)} />
                           </div>
-                          <span className={`font-heading text-[10px] font-bold uppercase px-2 py-1 ${
-                            p.in_stock ? 'bg-accent/20 text-accent-foreground' : 'bg-destructive/20 text-destructive'
-                          }`}>{p.in_stock ? 'In Stock' : 'Out of Stock'}</span>
+                          {p.stock_qty <= 0 ? (
+                            <span className="font-heading text-[10px] font-bold uppercase px-2 py-1 bg-destructive/20 text-destructive">Out of Stock</span>
+                          ) : p.stock_qty <= 20 ? (
+                            <span className="font-heading text-[10px] font-bold uppercase px-2 py-1 bg-orange-100 text-orange-600 flex items-center gap-1">
+                              <AlertTriangle size={10} /> Low Stock
+                            </span>
+                          ) : (
+                            <span className="font-heading text-[10px] font-bold uppercase px-2 py-1 bg-green-100 text-green-600">In Stock</span>
+                          )}
                         </div>
                       </div>
 
