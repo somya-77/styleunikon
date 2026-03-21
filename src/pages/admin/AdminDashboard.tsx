@@ -230,6 +230,22 @@ const AdminDashboard = () => {
                   </div>
                 ))}
               </div>
+              <h2 className="text-xl font-extrabold mb-4">LOW STOCK ALERTS</h2>
+              {dbProducts.filter(p => p.stock_qty <= 20).length === 0 ? (
+                <p className="font-body text-sm text-muted-foreground mb-8">All products are well stocked ✓</p>
+              ) : (
+                <div className="border-2 border-orange-300 bg-orange-50/50 p-4 mb-8">
+                  {dbProducts.filter(p => p.stock_qty <= 20).map(p => (
+                    <div key={p.id} className="flex items-center justify-between py-2 border-b border-orange-200 last:border-0">
+                      <span className="font-heading text-xs font-bold">{p.name}</span>
+                      <span className={`font-heading text-xs font-bold ${p.stock_qty <= 0 ? 'text-destructive' : 'text-orange-600'}`}>
+                        {p.stock_qty <= 0 ? 'OUT OF STOCK' : `${p.stock_qty} left`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <h2 className="text-xl font-extrabold mb-4">RECENT ORDERS</h2>
               <div className="border-2 border-foreground overflow-x-auto">
                 <table className="w-full">
