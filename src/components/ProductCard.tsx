@@ -63,7 +63,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <h3 className="font-heading text-sm font-bold uppercase tracking-wider">{product.name}</h3>
           <div className="flex items-center justify-between mt-2">
             <span className="font-heading text-sm font-extrabold text-accent">{formatPrice(product.price)}</span>
-            <span className="font-body text-[10px] text-muted-foreground uppercase">{product.category}</span>
+            <StockBadge stockQty={product.stockQty} inStock={product.inStock} compact />
           </div>
         </div>
       </Link>

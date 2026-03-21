@@ -142,15 +142,7 @@ const ProductPage = () => {
             <p className="font-heading text-3xl font-extrabold text-accent mb-2">{formatPrice(product.price)}</p>
 
             <div className="mb-6">
-              {product.inStock ? (
-                <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-green-600 bg-green-100 px-3 py-1">
-                  ● In Stock ({product.stockQty} available)
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-destructive bg-destructive/10 px-3 py-1">
-                  ● Out of Stock
-                </span>
-              )}
+              <StockBadge stockQty={product.stockQty} inStock={product.inStock} />
             </div>
 
             <p className="font-body text-sm leading-relaxed text-muted-foreground mb-8">{product.description}</p>
