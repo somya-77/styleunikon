@@ -45,8 +45,12 @@ const AdminDashboard = () => {
 
       setChecking(true);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUser = sessionData.session?.user ?? user;
+      // Use context user first; fallback to one-time session restore
+      let currentUser = user;
+      if (!currentUser) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        currentUser = sessionData.session?.user ?? null;
+      }
 
       if (!currentUser) {
         if (!cancelled) {
@@ -65,15 +69,12 @@ const AdminDashboard = () => {
       if (cancelled) return;
 
       if (error) {
-        setIsAdmin(false);
         setChecking(false);
         toast.error('Unable to verify admin access');
-        navigate('/admin/login', { replace: true });
         return;
       }
 
       if (!isAdmin) {
-        await supabase.auth.signOut();
         setIsAdmin(false);
         setChecking(false);
         toast.error('Access denied');
@@ -90,7 +91,7 @@ const AdminDashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, navigate]);
+  }, [user?.id, authLoading, navigate]);
 
   const fetchData = async () => {
     setLoadingData(true);

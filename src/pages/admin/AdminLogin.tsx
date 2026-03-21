@@ -1,62 +1,17 @@
 import { Layout } from '@/components/Layout';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Shield, Mail, Lock, ArrowRight } from 'lucide-react';
 
 const AdminLogin = () => {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const verifyExistingAdminSession = async () => {
-      if (authLoading) return;
-
-      if (!user) {
-        if (!cancelled) setCheckingSession(false);
-        return;
-      }
-
-      const { data: isAdmin, error } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin',
-      });
-
-      if (cancelled) return;
-
-      if (error) {
-        setCheckingSession(false);
-        toast.error('Failed to verify admin session');
-        return;
-      }
-
-      if (isAdmin) {
-        navigate('/admin', { replace: true });
-        return;
-      }
-
-      await supabase.auth.signOut();
-      setCheckingSession(false);
-      toast.error('Access denied. Admin credentials required.');
-    };
-
-    verifyExistingAdminSession();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
@@ -95,21 +50,10 @@ const AdminLogin = () => {
 
     setLoading(false);
     toast.success('Welcome, Admin!');
-    navigate('/admin', { replace: true });
-  };
 
-  if (authLoading || checkingSession) {
-    return (
-      <Layout>
-        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-heading text-sm font-bold uppercase tracking-wider animate-pulse">Checking admin session...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+    // Hard redirect avoids SPA auth race and restores session cleanly
+    window.location.assign('/admin');
+  };
 
   return (
     <Layout>
