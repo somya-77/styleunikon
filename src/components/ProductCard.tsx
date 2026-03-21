@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Product, formatPrice, PLACEHOLDER_IMAGE } from '@/data/products';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { StockBadge } from '@/components/StockBadge';
 
 const BADGE_STYLES: Record<string, string> = {
   new: 'bg-accent text-accent-foreground',
