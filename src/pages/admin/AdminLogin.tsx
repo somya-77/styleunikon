@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Shield, Mail, Lock, ArrowRight } from 'lucide-react';
 
 const AdminLogin = () => {
-  const { signIn, user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
