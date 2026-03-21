@@ -18,13 +18,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (PUBLIC_PATHS.includes(location.pathname)) {
+  // Admin routes are protected inside admin pages to avoid auth hydration race conditions
+  if (PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith('/admin')) {
     return <>{children}</>;
-  }
-
-  // Admin routes: redirect to admin login, not customer login
-  if (!user && location.pathname.startsWith('/admin')) {
-    return <Navigate to="/admin/login" replace />;
   }
 
   if (!user) {
