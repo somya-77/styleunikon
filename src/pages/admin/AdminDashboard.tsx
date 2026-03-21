@@ -6,7 +6,7 @@ import { formatPrice } from '@/data/products';
 import { toast } from 'sonner';
 import {
   Package, ShoppingCart, Users, FileText,
-  LogOut, RefreshCw, Eye, Plus, Trash2, Save, Upload, X, Image as ImageIcon
+  LogOut, RefreshCw, Eye, Plus, Trash2, Save, Upload, X, Image as ImageIcon, AlertTriangle
 } from 'lucide-react';
 
 type Tab = 'overview' | 'orders' | 'customers' | 'bulk' | 'products';
