@@ -98,6 +98,19 @@ const AdminLogin = () => {
     navigate('/admin', { replace: true });
   };
 
+  if (authLoading || checkingSession) {
+    return (
+      <Layout>
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-heading text-sm font-bold uppercase tracking-wider animate-pulse">Checking admin session...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4">

@@ -38,14 +38,58 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAdmin = async () => {
       if (authLoading) return;
-      if (!user) { navigate('/admin/login'); return; }
-      const { data } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin');
-      if (data && data.length > 0) { setIsAdmin(true); } else { navigate('/admin/login'); toast.error('Access denied'); }
+
+      setChecking(true);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUser = sessionData.session?.user ?? user;
+
+      if (!currentUser) {
+        if (!cancelled) {
+          setIsAdmin(false);
+          setChecking(false);
+          navigate('/admin/login', { replace: true });
+        }
+        return;
+      }
+
+      const { data: isAdmin, error } = await supabase.rpc('has_role', {
+        _user_id: currentUser.id,
+        _role: 'admin',
+      });
+
+      if (cancelled) return;
+
+      if (error) {
+        setIsAdmin(false);
+        setChecking(false);
+        toast.error('Unable to verify admin access');
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        setIsAdmin(false);
+        setChecking(false);
+        toast.error('Access denied');
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+
+      setIsAdmin(true);
       setChecking(false);
     };
+
     checkAdmin();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, authLoading, navigate]);
 
   const fetchData = async () => {
