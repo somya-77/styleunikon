@@ -151,7 +151,7 @@ const Signup = () => {
             <div className="mt-6 pt-6 border-t-2 border-foreground/20 text-center">
               <p className="font-body text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link to="/account" className="font-heading font-bold text-foreground hover:text-accent transition-colors underline accent-underline">
+                <Link to="/login" className="font-heading font-bold text-foreground hover:text-accent transition-colors underline accent-underline">
                   SIGN IN
                 </Link>
               </p>
