@@ -35,13 +35,16 @@ const Login = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      toast.error(error);
-    } else {
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+
       toast.success('Welcome back!');
-      navigate('/account');
+    } finally {
+      setLoading(false);
     }
   };
 
